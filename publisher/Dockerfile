@@ -5,7 +5,7 @@ ARG BASE_CONTAINER=python:3.8
 FROM --platform=linux/amd64 $BASE_CONTAINER
 
 # Adds metadata to image.
-LABEL maintainer="Fernando"
+LABEL maintainer="test"
 
 # dont write pyc files
 ENV PYTHONDONTWRITEBYTECODE 1
