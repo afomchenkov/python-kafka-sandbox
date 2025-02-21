@@ -48,25 +48,6 @@ services:
     environment:
       KAFKA_BROKERCONNECT: kafka:29092
 
-  consumer:
-    container_name: consumer1
-    build:
-      context: ./consumer1
-      dockerfile: Dockerfile
-    environment:
-      - KAFKA_TOPIC_NAME=topic_test
-      - KAFKA_SERVER=kafka
-      - KAFKA_PORT=29092
-    ports:
-      - 8001:8001
-    restart: "always"
-    depends_on:
-      - zookeeper
-      - kafka
-      - publisher
-    networks:
-      - broker-kafka
-
   publisher:
     container_name: publisher
     build:
@@ -82,6 +63,25 @@ services:
     depends_on:
       - zookeeper
       - kafka
+    networks:
+      - broker-kafka
+
+  consumer1:
+    container_name: consumer1
+    build:
+      context: ./consumer1
+      dockerfile: Dockerfile
+    environment:
+      - KAFKA_TOPIC_NAME=topic_test
+      - KAFKA_SERVER=kafka
+      - KAFKA_PORT=29092
+    ports:
+      - 8001:8001
+    restart: "always"
+    depends_on:
+      - zookeeper
+      - kafka
+      - publisher
     networks:
       - broker-kafka
 

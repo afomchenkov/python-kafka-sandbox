@@ -5,7 +5,6 @@ from app.dependencies.kafka import get_kafka_instance
 from app.enum import EnvironmentVariables
 from app.routers import publisher
 
-
 from dotenv import load_dotenv
 
 from fastapi import Depends, FastAPI, Request
@@ -21,6 +20,15 @@ kafka_server = Kafka(
 )
 
 
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    start_time = time.perf_counter()
+    response = await call_next(request)
+    process_time = time.perf_counter() - start_time
+    response.headers["X-Process-Time"] = str(process_time)
+    return response
+
+
 @app.on_event("startup")
 async def startup_event():
     await kafka_server.aioproducer.start()
@@ -29,15 +37,6 @@ async def startup_event():
 @app.on_event("shutdown")
 async def shutdown_event():
     await kafka_server.aioproducer.stop()
-
-
-@app.middleware("http")
-async def add_process_time_header(request: Request, call_next):
-    start_time = time.time()
-    response = await call_next(request)
-    process_time = time.time() - start_time
-    response.headers["X-Process-Time"] = str(process_time)
-    return response
 
 
 @app.get("/")

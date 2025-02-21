@@ -1,5 +1,5 @@
 # Set python version
-ARG BASE_CONTAINER=python:3.8
+ARG BASE_CONTAINER=python:3.12
 
 # Set the base image 
 FROM --platform=linux/amd64 $BASE_CONTAINER
