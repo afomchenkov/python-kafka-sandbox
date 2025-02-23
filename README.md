@@ -79,6 +79,25 @@ KAFKA_SERVER=
 KAFKA_PORT=
 ```
 
+- Commands:
+
+```bash
+# List topics
+docker exec -it kafka kafka-topics --bootstrap-server kafka:29092 --list
+# Create topic
+docker exec -it kafka kafka-topics --bootstrap-server kafka:29092 --create --topic topic_test --partitions 1 --replication-factor 1
+# Describe consumer group
+docker exec -it kafka kafka-consumer-groups --bootstrap-server kafka:29092 --group test-group --describe
+# List consumer groups
+docker exec -it kafka kafka-consumer-groups --bootstrap-server localhost:9092 --list
+# Check if Kafka group coordinator is responsive
+docker exec -it kafka kafka-consumer-groups --bootstrap-server kafka:29092 --list
+# Check logs container Kafka
+docker logs kafka --tail 50
+# Check advertised listeners
+docker-compose logs kafka | grep "advertised.listeners"
+```
+
 ## Help and Resources
 
 You can read more about the tools documentation:
