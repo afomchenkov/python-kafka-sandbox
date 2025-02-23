@@ -1,0 +1,15 @@
+FROM node:22-alpine3.19
+
+USER root
+
+WORKDIR /app
+
+RUN apk update && apk add yarn curl bash make && rm -rf /var/cache/apk/*
+
+COPY package*.json ./
+
+RUN npm install
+
+COPY . .
+
+ENTRYPOINT [ "npm", "run", "start:dev" ]

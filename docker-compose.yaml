@@ -1,6 +1,25 @@
 version: "3"
 
 services:
+  postgresql:
+    image: kafka-sandbox-db
+    container_name: kafka-sandbox-db
+    build:
+      context: ./resources/db
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - 5432:5432
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -d kafka-sandbox -U postgress"]
+      interval: 3s
+      timeout: 5s
+      retries: 6
+    volumes:
+      - kafka-sandbox-db-data:/var/lib/postgresql/data
+    networks:
+      - broker-kafka
+
   zookeeper:
     # image: confluentinc/cp-zookeeper:7.2.6
     image: confluentinc/cp-zookeeper:6.2.0
@@ -25,7 +44,6 @@ services:
       - zookeeper-log:/var/lib/zookeeper/log:Z
 
   kafka:
-    # image: confluentinc/cp-server:7.2.6
     image: confluentinc/cp-kafka:6.2.0
     container_name: kafka
     networks:
@@ -39,9 +57,10 @@ services:
       - "9101:9101"
     healthcheck:
       test: nc -z localhost 9092
+      # test: ["CMD-SHELL", "kafka-topics --bootstrap-server localhost:29092 --list"]
       interval: 10s
       retries: 10
-      start_period: 30s
+      timeout: 30s
     volumes:
       - kafka-data:/var/lib/kafka/data:Z
       - kafka-secrets:/etc/kafka/secrets:Z
@@ -113,8 +132,12 @@ services:
     networks:
       - broker-kafka
     depends_on:
-      - kafka
-      - zookeeper
+      kafka:
+        condition: service_healthy
+        required: true
+      zookeeper:
+        condition: service_healthy
+        required: true
     ports:
       - 19000:9000
     environment:
@@ -195,6 +218,7 @@ services:
 
   # rest-proxy:
   #   image: confluentinc/cp-kafka-rest:7.2.1
+  #   container_name: rest-proxy
   #   depends_on:
   #     kafka:
   #       condition: service_healthy
@@ -203,7 +227,6 @@ services:
   #       required: true
   #   ports:
   #     - 8082:8082
-  #   container_name: rest-proxy
   #   environment:
   #     KAFKA_REST_HOST_NAME: rest-proxy
   #     KAFKA_REST_BOOTSTRAP_SERVERS: kafka:9092
@@ -230,7 +253,7 @@ services:
       - KAFKA_PORT=29092
     ports:
       - 8000:8000
-    restart: "always"
+    restart: always
     depends_on:
       - zookeeper
       - kafka
@@ -248,14 +271,49 @@ services:
       - KAFKA_PORT=29092
     ports:
       - 8001:8001
-    restart: "always"
+    restart: always
     depends_on:
       - zookeeper
       - kafka
       - publisher
     networks:
       - broker-kafka
-      
+
+  consumer2:
+    container_name: consumer2
+    build:
+      context: ./consumer2
+      dockerfile: Dockerfile.dev
+    ports:
+      - 8002:8002
+    tty: true
+    environment:
+      - NODE_ENV=development
+      - PORT=8002
+      - POSTGRES_DB=kafka-sandbox
+      - POSTGRES_USER=postgress
+      - POSTGRES_PASSWORD=postgress
+      - POSTGRES_PORT=5432
+      - POSTGRES_HOST=kafka-sandbox-db
+      - DATABASE_LOGGING=true
+      - KAFKA_TOPIC_NAME=topic_test
+      - KAFKA_SERVER=kafka
+      - KAFKA_PORT=29092
+    restart: always
+    volumes:
+      - ./consumer2:/app
+    depends_on:
+      postgresql:
+        condition: service_healthy
+      zookeeper:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      publisher:
+        condition: service_healthy
+    networks:
+      - broker-kafka
+
 volumes:
   zookeeper-secrets:
     name: zookeeper-secrets
@@ -269,6 +327,8 @@ volumes:
     name: kafka-secrets
   schema-registry-secrets:
     name: schema-registry-secrets
+  kafka-sandbox-db-data:
+    name: kafka-sandbox-db-data
 
 networks:
   broker-kafka:
