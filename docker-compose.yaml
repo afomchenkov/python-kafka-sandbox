@@ -317,7 +317,6 @@ services:
     container_name: consumer3
     build:
       context: ./consumer3
-      dockerfile: Dockerfile
     ports:
       - 8003:8003
     healthcheck:
@@ -333,8 +332,6 @@ services:
       - KAFKA_SERVER=kafka
       - KAFKA_PORT=29092
     restart: always
-    volumes:
-      - ./consumer3:/app
     depends_on:
       zookeeper:
         condition: service_healthy
