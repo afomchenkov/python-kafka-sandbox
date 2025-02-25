@@ -313,6 +313,38 @@ services:
     networks:
       - broker-kafka
 
+  consumer3:
+    container_name: consumer3
+    build:
+      context: ./consumer3
+      dockerfile: Dockerfile
+    ports:
+      - 8003:8003
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8003/healthcheck"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    tty: true
+    environment:
+      - NODE_ENV=development
+      - PORT=8003
+      - KAFKA_TOPIC_NAME=topic_test
+      - KAFKA_SERVER=kafka
+      - KAFKA_PORT=29092
+    restart: always
+    volumes:
+      - ./consumer3:/app
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      publisher:
+        condition: service_healthy
+    networks:
+      - broker-kafka
+
 volumes:
   zookeeper-secrets:
     name: zookeeper-secrets

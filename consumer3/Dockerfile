@@ -15,8 +15,8 @@ WORKDIR /app
 # Install curl
 RUN apt-get update && apt-get install -y curl && rm -rf /var/lib/apt/lists/*
 
-COPY --from=builder /app/build/libs/app.jar app.jar
+COPY --from=builder /app/build/libs/kafka-sandbox-0.0.1.jar kafka-sandbox-0.0.1.jar
 
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "kafka-sandbox-0.0.1.jar"]
 
-EXPOSE 8080
+EXPOSE 8003
